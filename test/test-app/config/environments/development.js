@@ -3,8 +3,9 @@ export default {
     level: 'DEBUG',
     format: 'text',
     enabled: true,
+
     filter: {
-      params: [],
-    },
+      params: []
+    }
   }
-}
+};

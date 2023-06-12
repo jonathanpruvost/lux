@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 
 /**
  * Use this util as a brute force way of tricking flow into understanding intent
@@ -19,5 +19,5 @@
  * @private
  */
 export default function setType(fn: () => any): any {
-  return fn()
+  return fn();
 }

@@ -1,14 +1,10 @@
-/* @flow */
-
-import { BUILT_IN_ACTIONS } from '../../../controller'
-// eslint-disable-next-line no-duplicate-imports
-import type { BuiltInAction } from '../../../controller'
+// @flow
+import { BUILT_IN_ACTIONS } from '../../../controller';
+import type { Controller$builtIn } from '../../../controller'; // eslint-disable-line max-len, no-duplicate-imports
 
 /**
  * @private
  */
-function normalizeOnly(only: Array<BuiltInAction>): Array<BuiltInAction> {
-  return BUILT_IN_ACTIONS.filter(action => only.includes(action))
+export default function normalizeOnly(only: Array<Controller$builtIn>) {
+  return only.filter(action => BUILT_IN_ACTIONS.indexOf(action) >= 0);
 }
-
-export default normalizeOnly

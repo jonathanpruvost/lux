@@ -1,15 +1,10 @@
-/* @flow */
+// @flow
+import EventEmitter from 'events';
+import type { FSWatcher } from 'fs';
 
-import EventEmitter from 'events'
-import type { FSWatcher } from 'fs'
+import { Client } from 'fb-watchman';
 
-import { Client as Watchman } from 'fb-watchman'
-
-import initialize from './initialize'
-
-export type Client =
-  | FSWatcher
-  | Watchman
+import initialize from './initialize';
 
 /**
  * @private
@@ -17,22 +12,22 @@ export type Client =
 class Watcher extends EventEmitter {
   path: string;
 
-  client: Client;
+  client: Client | FSWatcher;
 
   constructor(path: string, useWatchman: boolean = true): Promise<Watcher> {
-    super()
-    return initialize(this, path, useWatchman)
+    super();
+    return initialize(this, path, useWatchman);
   }
 
   destroy() {
-    const { client } = this
+    const { client } = this;
 
-    if (client instanceof Watchman) {
-      client.end()
+    if (client instanceof Client) {
+      client.end();
     } else {
-      client.close()
+      client.close();
     }
   }
 }
 
-export default Watcher
+export default Watcher;

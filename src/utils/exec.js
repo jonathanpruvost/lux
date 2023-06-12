@@ -1,10 +1,10 @@
-/* @flow */
+// @flow
+import { exec as nativeExec } from 'child_process';
 
-import * as cp from 'child_process'
-
-import promisify from './promisify'
-
-type Options = {
+/**
+ * @private
+ */
+export default function exec(cmd: string, opts?: {
   cwd?: string;
   env?: Object;
   uid?: number;
@@ -14,13 +14,15 @@ type Options = {
   encoding?: string;
   maxBuffer?: number;
   killSignal?: string;
+}): Promise<[string | Buffer, string | Buffer]> {
+  return new Promise((resolve, reject) => {
+    nativeExec(cmd, opts, (err, stdout, stderr) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      resolve([stdout, stderr]);
+    });
+  });
 }
-
-/**
- * @private
- */
-const exec: (command: string, options?: Options) => Promise<Buffer> = (
-  promisify(cp.exec)
-)
-
-export default exec

@@ -1,5 +1,4 @@
-/* @flow */
-
+// @flow
 import type Controller from '../../controller';
 import type { Router$Namespace } from '../index';
 

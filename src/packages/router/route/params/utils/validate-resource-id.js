@@ -1,7 +1,6 @@
-/* @flow */
-
-import { ResourceMismatchError } from '../errors'
-import type Request from '../../../../request'
+// @flow
+import { ResourceMismatchError } from '../errors';
+import type { Request } from '../../../../server';
 
 /**
  * @private
@@ -15,8 +14,8 @@ export default function validateResourceId({
   }
 }: Request): true {
   if (id !== resourceId) {
-    throw new ResourceMismatchError('data.id', String(id), String(resourceId))
+    throw new ResourceMismatchError('data.id', String(id), String(resourceId));
   }
 
-  return true
+  return true;
 }

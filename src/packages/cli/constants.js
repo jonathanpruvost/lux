@@ -1,7 +1,6 @@
-/* @flow */
-
-import template from '../template'
-import { fileLink } from '../../utils/github'
+// @flow
+import template from '../template';
+import { fileLink } from '../../utils/github';
 
 export const VALID_DATABASES = [
   'postgres',
@@ -9,11 +8,11 @@ export const VALID_DATABASES = [
   'mysql',
   'mariadb',
   'oracle'
-]
+];
 
 const DB_INTERFACE_URL = fileLink('src/packages/database/interfaces.js', {
   line: 17
-})
+});
 
 export const CONNECTION_STRING_MESSAGE = template`
 
@@ -25,4 +24,4 @@ export const CONNECTION_STRING_MESSAGE = template`
 
     For guidance, see:
     ${DB_INTERFACE_URL}
-`
+`;

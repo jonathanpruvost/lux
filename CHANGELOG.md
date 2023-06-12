@@ -1,5 +1,22 @@
 # Lux Changelog
 
+### v1.2.3 (July 20, 2018)
+
+* [[`56225dac71`](https://github.com/postlight/lux/commit/56225dac71)] - **fix**: falsy IDs breaking relationships (#730) (Nick Schot)
+* [[`667febd98f`](https://github.com/postlight/lux/commit/667febd98f)] - **release**: v1.2.2 🔧 (#722) (Zachary Golba)
+
+### v1.2.2 (Aug 28, 2017)
+
+*   [[`6c22bdf071`](https://github.com/postlight/lux/commit/6c22bdf071)] - **fix**: do not validate param existence for patch requests (#721) (Zachary Golba)
+*   [[`ea2b8f9926`](https://github.com/postlight/lux/commit/ea2b8f9926)] - **release**: v1.2.1 🔧 (#716) (Zachary Golba)
+
+### v1.2.1 (July 11, 2017)
+
+*   [[`6b3547f436`](https://github.com/postlight/lux/commit/6b3547f436)] - **fix**: filtering with an empty array as a value causes an error (#715) (Nick Schot)
+*   [[`0f406b5908`](https://github.com/postlight/lux/commit/0f406b5908)] - **fix**: detailed error messages leak into production responses (#713) (Zachary Golba)
+*   [[`2327c13d1a`](https://github.com/postlight/lux/commit/2327c13d1a)] - **docs**: additional documentation around cli generators (#711) (Kyle MacDonald)
+*   [[`1691f9ad50`](https://github.com/postlight/lux/commit/1691f9ad50)] - **release**: 1.2.0 ✨ (#705) (Zachary Golba)
+
 ### v1.2.0 (May 16, 2017)
 
 ##### Commits

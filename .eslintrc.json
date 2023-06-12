@@ -1,31 +1,17 @@
 {
   "parser": "babel-eslint",
-  "plugins": [
-    "jest",
-    "flowtype"
-  ],
+  "plugins": ["flowtype"],
   "extends": "airbnb-base",
   "env": {
     "node": true
   },
   "globals": {
-    "$PropertyType": true,
-    "afterAll": true,
-    "afterEach": true,
-    "beforeAll": true,
-    "beforeEach": true,
     "Class": true,
-    "describe": true,
-    "expect": true,
     "Generator": true,
-    "it": true,
-    "jasmine": true,
-    "jest": true,
-    "Knex$QueryBuilder": true,
-    "Knex$SchemaBuilder": true,
+    "$PropertyType": true,
     "Knex$Transaction": true,
-    "Process": true,
-    "test": true
+    "Knex$QueryBuilder": true,
+    "Knex$SchemaBuilder": true
   },
   "settings": {
     "flowtype": {
@@ -41,15 +27,13 @@
     }
   },
   "rules": {
-    "semi": ["error", "never"],
     "strict": 0,
     "max-len": ["error", 80],
     "arrow-parens": 0,
     "comma-dangle": [2, "only-multiline"],
+    "prefer-reflect": 2,
     "global-require": 0,
-    "no-underscore-dangle": 0,
     "class-methods-use-this": 0,
-    "no-irregular-whitespace": 0,
     "no-restricted-syntax": [
       "error",
       "ForInStatement",
@@ -68,13 +52,9 @@
       "newlines-between": "always"
     }],
     "import/extensions": 0,
-    "import/no-named-default": 0,
     "import/no-dynamic-require": 0,
     "import/prefer-default-export": 0,
-    "jest/no-focused-tests": "error",
-    "jest/no-disabled-tests": "warn",
-    "jest/no-identical-title": "error",
-    "flowtype/semi": ["error", "never"],
+    "flowtype/semi": 2,
     "flowtype/no-dupe-keys": 2,
     "flowtype/boolean-style": [2, "boolean"],
     "flowtype/generic-spacing": 2,

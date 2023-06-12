@@ -1,5 +1,4 @@
-/* @flow */
-
+// @flow
 declare export function Compiler$manifestWriter(
   value: string | Array<string>,
   resolveName?: (value: string) => string,

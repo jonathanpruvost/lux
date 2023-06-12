@@ -1,129 +1,112 @@
-/* @flow */
+import childProcess from 'child_process';
 
-import { spawn } from 'child_process'
+// @const spawn
+// Spawn commands from a node child process
+
+const { spawn } = childProcess;
 
 // @const repoDir
 // Starting CWD in the repo root
 
-const repoDir = process.cwd()
+const repoDir = process.cwd();
 
 // @function log
 // Shortcut for console.log
 
-// eslint-disable-next-line no-console
-function log(...msg) { console.log(...msg) }
+function log(...msg) { console.log(...msg); }
 
 // @async runCommand
 // Run a terminal command
 
-async function runCommand(command, args = [], messages = []) {
-  let [preMsg, successMsg] = messages
-
-  if (typeof preMsg === 'undefined') {
-    preMsg = ''
-  }
-
-  if (typeof successMsg === 'undefined') {
-    successMsg = ''
-  }
-
-  log(preMsg)
+async function runCommand(command, args = [], [ preMsg = '', successMsg = '' ]) {
+  log(preMsg);
 
   return new Promise((resolve, reject) => {
-    const run = spawn(command, args)
+    const run = spawn(command, args);
 
-    run.stderr.once('data', reject)
-    run.stdout.on('data', data => log(data.toString()))
+    run.stderr.on('data', err => {
+      log(err.toString());
+      reject(err.toString());
+    });
 
-    run.once('exit', () => resolve(successMsg))
+    run.stdout.on('data', data => log(data.toString()));
+
+    run.on('exit', () => resolve(successMsg));
+
   })
-  .then(log)
-  .catch(err => log(err.toString()))
+  .then(msg => log(msg))
+  .catch(err => log(err.toString()));
+
 }
 
 // @async runInspector
 // Run the node inspector
 // and open URL in Chrome window
 
-function runInspector() {
-  log('Starting node inspector...')
+async function runInspector() {
+  log('Starting node inspector...');
 
-  return new Promise(() => {
-    const inspectArgs = '--inspect=4000 dist/boot.js'.split(' ')
-    const run = spawn('node', inspectArgs)
+  return new Promise((resolve, reject) => {
 
-    let url
+    const inspectArgs = '--inspect=4000 dist/boot.js'.split(' ');
+    const run = spawn('node', inspectArgs);
 
-    function openURL(target) {
+    let url;
+
+    function openURL(url) {
       runCommand(
         'osascript',
-        ['-e', `tell application "Google Chrome" to open location "${target}"`],
+        ['-e', `tell application "Google Chrome" to open location "${url}"`],
         ['Opening in Google Chrome (OSX Users only)']
-      )
+      );
     }
 
-    function parseURL(source) {
-      const parts = source.split('chrome-devtools')
-
-      return `chrome-devtools${parts[1]}`.replace(/\s+/g, '')
+    function parseURL(msg) {
+      msg = msg.split('chrome-devtools');
+      return `chrome-devtools${msg[1]}`.replace(/\s+/g, '');
     }
 
-    run.stderr.on('data', (buff) => {
-      if (url) {
-        return
-      }
+    run.stderr.on('data', msg => {
+      if (url) { return; }
+      msg = msg.toString();
+      log(msg);
+      url = parseURL(msg);
+      openURL(url);
 
-      const msg = buff.toString()
+    });
 
-      log(msg)
-      url = parseURL(msg)
-      openURL(url)
-    })
+    run.stdout.on('data', data => log(data.toString()));
 
-    run.stdout.on('data', data => log(data.toString()))
-    run.on('exit', (code) => log(`Child exited with code ${code}`))
+    run.on('exit', (code) => log(`Child exited with code ${code}`));
+
   })
   .then(msg => log(msg))
-  .catch(err => log(err.toString))
+  .catch(err => log(err.toString));
+
 }
 
 // @listener
 // Ensure repoDir is returned to when process exits
 
 process.on('exit', () => {
-  process.chdir(repoDir)
+  process.chdir(repoDir);
 });
 
 // @async
 // Run commands
 
-(async function main() {
-  const cleanArgs = [
-    'rm',
-    '-rf',
-    '.nyc_output',
-    'coverage',
-    'dist',
-    'test/test-app/dist',
-    'test-results.xml',
-  ]
+(async function() {
 
-  await runCommand('shx', cleanArgs, [
-    'Cleaning Lux repo...',
-    'Repo cleaned.',
-  ])
+  const cleanArgs = 'rm -rf .nyc_output coverage dist test/test-app/dist test-results.xml'.split(' ');
 
-  await runCommand('rollup', ['-c'], [
-    'Building Lux source...',
-    'Lux source built.',
-  ])
+  await runCommand('shx', cleanArgs, ['Cleaning Lux repo...', 'Repo cleaned.']);
 
-  process.chdir('./test/test-app')
+  await runCommand('rollup', ['-c'], ['Building Lux source...', 'Lux source built.']);
 
-  await runCommand('lux', ['build'], [
-    'Building Lux test-app...',
-    'Lux test-app built.',
-  ])
+  process.chdir('./test/test-app');
 
-  await runInspector()
-}())
+  await runCommand('lux', ['build'], ['Building Lux test-app...', 'Lux test-app built.']);
+
+  await runInspector();
+
+}());

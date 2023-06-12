@@ -1,6 +1,5 @@
-/* @flow */
-
-import type Model, { Model$Hook } from '../index'
+// @flow
+import type Model, { Model$Hook } from '../index';
 
 /**
  * @private
@@ -14,5 +13,5 @@ export default function runHooks(
     .filter(Boolean)
     .reduce((prev, next) => (
       prev.then(() => next(record, trx))
-    ), Promise.resolve())
+    ), Promise.resolve());
 }

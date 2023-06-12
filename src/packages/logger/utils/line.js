@@ -1,6 +1,5 @@
-/* @flow */
-
-import { insertValues } from '../../template'
+// @flow
+import { insertValues } from '../../template';
 
 /**
  * @private
@@ -12,5 +11,5 @@ export default function line(
   return insertValues(strings, ...values)
     .replace(/(\r\n|\n|\r|)/gm, '')
     .replace(/\s+/g, ' ')
-    .trim()
+    .trim();
 }

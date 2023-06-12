@@ -1,8 +1,7 @@
-/* @flow */
+// @flow
+import { dim } from 'chalk';
 
-import { dim } from 'chalk'
-
-import template from '../../template'
+import template from '../../template';
 
 /**
  * TODO: Update the 'routes.js' file when generating a resource within a
@@ -30,4 +29,4 @@ export const NAMESPACED_RESOURCE_MESSAGE = template`
       });
     }
 
-`
+`;

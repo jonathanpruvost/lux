@@ -1,5 +1,4 @@
-/* @flow */
-
+// @flow
 import type { Model } from '../index';
 
 type Relationship$ref = Model | Array<Model>;

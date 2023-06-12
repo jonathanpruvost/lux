@@ -1,6 +1,5 @@
-/* @flow */
-
-import entries from './entries'
+// @flow
+import entries from './entries';
 
 /**
  * @private
@@ -14,17 +13,17 @@ export default function promiseHash(promises: Object): Promise<Object> {
             if (promise && typeof promise.then === 'function') {
               promise
                 .then((value) => resolve({ [key]: value }))
-                .catch(reject)
+                .catch(reject);
             } else {
-              resolve({ [key]: promise })
+              resolve({ [key]: promise });
             }
           })
         ))
     ).then((objects) => objects.reduce((hash, object) => ({
       ...hash,
       ...object
-    }), {}))
+    }), {}));
   }
 
-  return Promise.resolve({})
+  return Promise.resolve({});
 }

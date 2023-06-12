@@ -1,9 +1,8 @@
-/* @flow */
+// @flow
+import path from 'path';
 
-import * as path from 'path'
-
-import template from '../../template'
-import { writeFile } from '../../fs'
+import template from '../../template';
+import { writeFile } from '../../fs';
 
 /**
  * @private
@@ -14,66 +13,27 @@ export default async function createBootScript(dir: string, {
   useStrict: boolean;
 }): Promise<void> {
   let data = template`
-    const http = require('http');
-
-    const bundle = require('./bundle');
-
+    const CWD = process.cwd();
     const { env: { PORT } } = process;
-    const hasIPC = typeof process.send === 'function';
-    const config = Object.assign({}, bundle.config, {
-      path: process.cwd(),
-      database: bundle.database,
-    });
+    const { Application, config, database } = require('./bundle');
 
-    let server;
-
-    module.exports = new bundle.Application(config)
-      .then(app => {
-        if (hasIPC) {
-          process.send('ready');
-        } else {
-          process.emit('ready');
-        }
-
-        if (app.adapter.type === 'http') {
-          server = http.createServer((request, response) => {
-            app.exec(request, response);
-          });
-          server.listen(PORT);
-        }
-
-        return app
-          .on('error', err => {
-            setImmediate(() => {
-              app.logger.error(err);
-            });
-          })
-          .on('request:error', (request, response, err) => {
-            setImmediate(() => {
-              app.logger.error(err);
-            });
-          })
-          .on('request:complete', (request, response) => {
-            setImmediate(() => {
-              app.logger.info(\`\${request.method} \${response.statusCode} \`);
-            });
-          });
+    module.exports = new Application(
+      Object.assign(config, {
+        database,
+        path: CWD,
+        port: PORT
       })
-      .catch(err => {
-        if (hasIPC) {
-          process.send({
-            error: err ? err.stack : void 0,
-            message: 'error'
-          });
-        } else {
-          process.emit('error', err);
-        }
+    ).catch(err => {
+      process.send({
+        error: err ? err.stack : void 0,
+        message: 'error'
       });
-  `
+    });
+  `;
 
   if (useStrict) {
-    data = `'use strict';\n\n${data}`
+    data = `'use strict';\n\n${data}`;
   }
 
-  await writeFile(path.join(dir, 'dist', 'boot.js'), Buffer.from(data))
+  await writeFile(path.join(dir, 'dist', 'boot.js'), data);
 }

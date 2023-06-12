@@ -1,10 +1,9 @@
-/* @flow */
+// @flow
+import { version, devDependencies } from '../../../../package.json';
+import template from '../../template';
 
-import { version, devDependencies } from '../../../../package.json'
-import template from '../../template'
-
-const LUX_VERSION: string = version
-const BABEL_PRESET_VERSION: string = devDependencies['babel-preset-lux']
+const LUX_VERSION: string = version;
+const BABEL_PRESET_VERSION: string = devDependencies['babel-preset-lux'];
 
 /**
  * @private
@@ -30,4 +29,4 @@ export default (name: string): string => template`
       "node": ">= 6.0"
     }
   }
-`
+`;

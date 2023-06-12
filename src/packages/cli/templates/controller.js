@@ -1,12 +1,11 @@
-/* @flow */
+// @flow
+import { classify, camelize, pluralize } from 'inflection';
 
-import { classify, camelize, pluralize } from 'inflection'
-
-import template from '../../template'
-import entries from '../../../utils/entries'
-import indent from '../utils/indent'
-import chain from '../../../utils/chain'
-import underscore from '../../../utils/underscore'
+import template from '../../template';
+import entries from '../../../utils/entries';
+import indent from '../utils/indent';
+import chain from '../../../utils/chain';
+import underscore from '../../../utils/underscore';
 
 /**
  * @private
@@ -15,10 +14,10 @@ export default (name: string, attrs: Array<string>): string => {
   let normalized = chain(name)
     .pipe(underscore)
     .pipe(classify)
-    .value()
+    .value();
 
   if (!normalized.endsWith('Application')) {
-    normalized = pluralize(normalized)
+    normalized = pluralize(normalized);
   }
 
   const body = entries(
@@ -33,23 +32,23 @@ export default (name: string, attrs: Array<string>): string => {
         ]
       }), { params: [] })
   ).reduce((result, group, index) => {
-    const [key] = group
-    let [, value] = group
-    let str = result
+    const [key] = group;
+    let [, value] = group;
+    let str = result;
 
     if (value.length) {
-      value = value.join(',\n')
+      value = value.join(',\n');
 
       if (index && str.length) {
-        str += '\n\n'
+        str += '\n\n';
       }
 
       str += `${indent(index === 0 ? 2 : 6)}${key} = ` +
-        `[\n${value}\n${indent(6)}];`
+        `[\n${value}\n${indent(6)}];`;
     }
 
-    return str
-  }, '')
+    return str;
+  }, '');
 
   return template`
     import { Controller } from 'lux-framework';
@@ -59,5 +58,5 @@ export default (name: string, attrs: Array<string>): string => {
     }
 
     export default ${normalized}Controller;
-  `
-}
+  `;
+};

@@ -1,32 +1,22 @@
-/* @flow */
+// @flow
+import { createDefaultConfig } from '../config';
+import merge from '../../utils/merge';
+import type Logger from '../logger';
+import type Router from '../router';
+import type Server from '../server';
+import type Controller from '../controller';
+import type Serializer from '../serializer';
+import type Database, { Model } from '../database';
+import type { FreezeableMap } from '../freezeable';
 
-import EventEmitter from 'events'
-
-import { createDefaultConfig } from '../config'
-import * as responder from '../responder'
-import merge from '../../utils/merge'
-import tryCatch from '../../utils/try-catch'
-import type Logger from '../logger'
-import type Router from '../router'
-import type Controller from '../controller'
-import type Serializer from '../serializer'
-import type { Config } from '../config'
-import type { Adapter } from '../adapter'
-import type { FreezeableMap } from '../freezeable'
-import type Database, { Model, Config as DatabaseConfig } from '../database'
-
-import initialize from './initialize'
-
-export type Options = Config & {
-  path: string;
-  database: DatabaseConfig;
-}
+import initialize from './initialize';
+import type { Application$opts } from './interfaces';
 
 /**
  * @class Application
  * @public
  */
-class Application extends EventEmitter {
+class Application {
   /**
    * The path of `Application` instance.
    *
@@ -37,11 +27,14 @@ class Application extends EventEmitter {
   path: string;
 
   /**
-   * @property adapter
-   * @type {Adapter}
-   * @private
+   * The port that an `Application` instance is listening for incomming HTTP
+   * requests.
+   *
+   * @property port
+   * @type {Number}
+   * @public
    */
-  adapter: Adapter;
+  port: number;
 
   /**
    * A reference to the `Database` instance.
@@ -69,6 +62,15 @@ class Application extends EventEmitter {
    * @private
    */
   router: Router;
+
+  /**
+   * A reference to the `Server` instance.
+   *
+   * @property server
+   * @type {Server}
+   * @private
+   */
+  server: Server;
 
   /**
    * A map containing each `Model` class.
@@ -103,52 +105,10 @@ class Application extends EventEmitter {
    * @return {Promise}
    * @public
    */
-  constructor(options: Options): Promise<Application> {
-    super()
-    return initialize(this, merge(createDefaultConfig(), options))
-  }
-
-  /**
-   * @method exec
-   * @private
-   */
-  exec(...args: Array<any>): Promise<void> {
-    return tryCatch(async () => {
-      const [request, response] = await this.adapter(...args)
-
-      this.emit('request:start', request, response)
-
-      const respond = responder.create(request, response)
-      const route = this.router.match(request)
-
-      if (route) {
-        this.emit('request:match', request, response, route)
-
-        const data = await route
-          .visit(request, response)
-          .catch(err => {
-            this.emit('request:error', request, response, err)
-          })
-
-        respond(data)
-        this.emit('request:complete', request, response)
-      } else {
-        respond(404)
-        this.emit('request:complete', request, response)
-      }
-    }, err => {
-      this.emit('error', err)
-    })
-  }
-
-  /**
-   * @method destroy
-   * @private
-   */
-  async destroy(): Promise<void> {
-    await this.store.connection.destroy()
+  constructor(opts: Application$opts): Promise<Application> {
+    return initialize(this, merge(createDefaultConfig(), opts));
   }
 }
 
-export default Application
-export type { Application$opts, Application$factoryOpts } from './interfaces'
+export default Application;
+export type { Application$opts, Application$factoryOpts } from './interfaces';

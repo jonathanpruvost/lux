@@ -1,112 +1,102 @@
-/* @flow */
+// @flow
+import fs from 'fs';
+import { join as joinPath, resolve as resolvePath } from 'path';
+import type { Stats } from 'fs'; // eslint-disable-line no-duplicate-imports
 
-import * as fs from 'fs'
-import * as path from 'path'
-// eslint-disable-next-line
-import type { Stats } from 'fs';
+import Watcher from './watcher';
+import createResolver from './utils/create-resolver';
+import createPathRemover from './utils/create-path-remover';
+import type { fs$readOpts, fs$writeOpts } from './interfaces';
 
-import promisify from '../../utils/promisify'
+export { default as rmrf } from './utils/rmrf';
+export { default as exists } from './utils/exists';
+export { default as isJSFile } from './utils/is-js-file';
+export { default as parsePath } from './utils/parse-path';
 
-import Watcher from './watcher'
-import createPathRemover from './utils/create-path-remover'
-
-export { default as rmrf } from './utils/rmrf'
-export { default as exists } from './utils/exists'
-export { default as isJSFile } from './utils/is-js-file'
-export { default as parsePath } from './utils/parse-path'
-
-/**
- * @private
- */
-export const stat: (path: string) => Promise<Stats> = (
-  promisify(fs.stat)
-)
+export type { fs$ParsedPath } from './interfaces';
 
 /**
  * @private
  */
-export const mkdir: (path: string, mode?: number) => Promise<void> = (
-  promisify(fs.mkdir)
-)
-
-/**
- * @private
- */
-export const rmdir: (path: string) => Promise<void> = (
-  promisify(fs.rmdir)
-)
-
-/**
- * @private
- */
-export const unlink: (path: string) => Promise<void> = (
-  promisify(fs.unlink)
-)
-
-/**
- * @private
- */
-export const readdir: (path: string) => Promise<Array<string>> = (
-  promisify(fs.readdir)
-)
-
-/**
- * @private
- */
-export const readFile: (path: string) => Promise<Buffer> = (
-  promisify(fs.readFile)
-)
-
-/**
- * @private
- */
-export const writeFile: (path: string, data: Buffer) => Promise<void> = (
-  promisify(fs.writeFile)
-)
-
-/**
- * @private
- */
-export const appendFile: (path: string, data: Buffer) => Promise<void> = (
-  promisify(fs.appendFile)
-)
-
-/**
- * @private
- */
-export function watch(watchPath: string): Promise<Watcher> {
-  return new Watcher(watchPath)
+export function watch(path: string): Promise<Watcher> {
+  return new Watcher(path);
 }
 
 /**
  * @private
  */
-export function mkdirRec(dirPath: string, mode: number = 511): Promise<void> {
-  const parent = path.resolve(dirPath, '..')
+export function stat(path: string): Promise<Stats> {
+  return new Promise((resolve, reject) => {
+    fs.stat(path, createResolver(resolve, reject));
+  });
+}
+
+/**
+ * @private
+ */
+export function mkdir(path: string, mode: number = 511) {
+  return new Promise((resolve, reject) => {
+    fs.mkdir(path, mode, createResolver(resolve, reject));
+  });
+}
+
+/**
+ * @private
+ */
+export function mkdirRec(path: string, mode: number = 511): Promise<void> {
+  const parent = resolvePath(path, '..');
 
   return stat(parent)
-    .catch(() => mkdirRec(parent, mode))
-    .then(() => mkdir(dirPath, mode))
+    .catch(err => {
+      if (err.code === 'ENOENT') {
+        return mkdirRec(parent, mode);
+      }
+
+      return Promise.reject(err);
+    })
+    .then(() => mkdir(path, mode))
     .catch(err => {
       if (err.code !== 'EEXIST') {
-        return Promise.reject(err)
+        return Promise.reject(err);
       }
-      return Promise.resolve()
-    })
+
+      return Promise.resolve();
+    });
 }
 
 /**
  * @private
  */
-export function readdirRec(dirPath: string): Promise<Array<string>> {
-  const stripPath = createPathRemover(dirPath)
+export function rmdir(path: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    fs.rmdir(path, createResolver(resolve, reject));
+  });
+}
 
-  return readdir(dirPath)
+/**
+ * @private
+ */
+export function readdir(path: string): Promise<Array<string>> {
+  return new Promise((resolve, reject) => {
+    fs.readdir(path, createResolver(resolve, reject));
+  });
+}
+
+/**
+ * @private
+ */
+export function readdirRec(
+  path: string,
+  opts?: fs$readOpts
+): Promise<Array<string>> {
+  const stripPath = createPathRemover(path);
+
+  return readdir(path, opts)
     .then(files => Promise.all(
       files.map(file => {
-        const filePath = path.join(dirPath, file)
+        const filePath = joinPath(path, file);
 
-        return Promise.all([filePath, stat(filePath)])
+        return Promise.all([filePath, stat(filePath)]);
       })
     ))
     .then(files => Promise.all(
@@ -116,12 +106,68 @@ export function readdirRec(dirPath: string): Promise<Array<string>> {
       ]))
     ))
     .then(files => files.reduce((arr, [file, children]) => {
-      const basename = stripPath(file)
+      const basename = stripPath(file);
 
       return [
         ...arr,
         basename,
-        ...children.map(child => path.join(basename, stripPath(child)))
-      ]
-    }, []))
+        ...children.map(child => joinPath(basename, stripPath(child)))
+      ];
+    }, []));
+}
+
+/**
+ * @private
+ */
+export function readFile(
+  path: string,
+  opts?: fs$readOpts
+): Promise<string | Buffer> {
+  return new Promise((resolve, reject) => {
+    fs.readFile(
+      path,
+      typeof opts === 'object' ? opts : {},
+      createResolver(resolve, reject)
+    );
+  });
+}
+
+/**
+ * @private
+ */
+export function writeFile(
+  path: string,
+  data: string | Buffer,
+  opts?: fs$writeOpts
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(path, data, opts, createResolver(resolve, reject));
+  });
+}
+
+/**
+ * @private
+ */
+export function appendFile(
+  path: string,
+  data: string | Buffer,
+  opts?: fs$writeOpts
+) {
+  return new Promise((resolve, reject) => {
+    fs.appendFile(
+      path,
+      data,
+      typeof opts === 'object' ? opts : {},
+      createResolver(resolve, reject)
+    );
+  });
+}
+
+/**
+ * @private
+ */
+export function unlink(path: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    fs.unlink(path, createResolver(resolve, reject));
+  });
 }

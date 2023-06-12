@@ -1,20 +1,23 @@
 [ignore]
-.*/bin/*
-.*/dist/*
-.*/examples/*
-.*/guide/*
-.*/lib/*
-.*/node_modules/*
-.*/scripts/*
-.*/test/test-app/*
-.*/__snapshots__/*
+.*/lib/.*
+.*/dist/.*
+.*/scripts/.*
+.*/examples/.*
+.*/test/test-app/.*
+
+[include]
+./src/
+./node_modules/
 
 [libs]
+node_modules/rollup-plugin-lux/decl/
+node_modules/rollup-plugin-lux/flow-typed/
 flow-typed/
 decl/
 
 [options]
 emoji=true
+strip_root=true
 suppress_comment=\\(.\\|\n\\)*\\$FlowIgnore
 
 module.name_mapper='LUX_LOCAL' -> '<PROJECT_ROOT>'
@@ -24,3 +27,6 @@ unsafe.enable_getters_and_setters=true
 
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
+
+[version]
+^0.38.0

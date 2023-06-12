@@ -1,41 +1,19 @@
-/* @flow */
+// @flow
+import { Model } from '../database';
+import { getDomain } from '../server';
+import { freezeProps } from '../freezeable';
+import type Serializer from '../serializer';
+import type { Query } from '../database'; // eslint-disable-line max-len, no-duplicate-imports
+import type { Request, Response } from '../server'; // eslint-disable-line max-len, no-duplicate-imports
 
-import { Model } from '../database'
-import { freezeProps } from '../freezeable'
-import getDomain from '../../utils/get-domain'
-import type Serializer from '../serializer'
-// eslint-disable-next-line no-duplicate-imports
-import type { Query } from '../database'
-import type Request from '../request'
-import type Response from '../response'
-
-import findOne from './utils/find-one'
-import findMany from './utils/find-many'
-import resolveRelationships from './utils/resolve-relationships'
-
-export type BuiltInAction =
-  | 'show'
-  | 'index'
-  | 'create'
-  | 'update'
-  | 'destroy'
-
-export type BeforeAction = (
-  request: Request,
-  response: Response,
-) => Promise<any>
-
-export type AfterAction<T> = (
-  request: Request,
-  response: Response,
-  data: T,
-) => Promise<T>
-
-export type Options<T: Model> = {
-  model?: Class<T>,
-  namespace?: string,
-  serializer?: Serializer<T>,
-}
+import findOne from './utils/find-one';
+import findMany from './utils/find-many';
+import resolveRelationships from './utils/resolve-relationships';
+import type {
+  Controller$opts,
+  Controller$beforeAction,
+  Controller$afterAction
+} from './interfaces';
 
 /**
  * ## Overview
@@ -419,7 +397,7 @@ class Controller {
    * @default []
    * @public
    */
-  beforeAction: Array<BeforeAction> = [];
+  beforeAction: Array<Controller$beforeAction> = [];
 
   /**
    * Functions to execute on each request handled by a `Controller` after the
@@ -471,7 +449,7 @@ class Controller {
    * @default []
    * @public
    */
-  afterAction: Array<AfterAction<*>> = [];
+  afterAction: Array<Controller$afterAction> = [];
 
   /**
    * The default amount of items to include per each response of the index
@@ -561,14 +539,7 @@ class Controller {
    */
   hasSerializer: boolean;
 
-  constructor(options: Options<*> = {}) {
-    const { model, serializer } = options
-    let { namespace } = options
-
-    if (typeof namespace !== 'string') {
-      namespace = ''
-    }
-
+  constructor({ model, namespace, serializer }: Controller$opts) {
     Object.assign(this, {
       model,
       namespace,
@@ -576,19 +547,19 @@ class Controller {
       hasModel: Boolean(model),
       hasNamespace: Boolean(namespace),
       hasSerializer: Boolean(serializer)
-    })
+    });
 
     freezeProps(this, true,
       'model',
       'namespace',
       'serializer'
-    )
+    );
 
     freezeProps(this, false,
       'hasModel',
       'hasNamespace',
       'hasSerializer'
-    )
+    );
   }
 
   /**
@@ -604,7 +575,7 @@ class Controller {
    * @public
    */
   index(req: Request): Query<Array<Model>> {
-    return findMany(this.model, req)
+    return findMany(this.model, req);
   }
 
   /**
@@ -619,8 +590,8 @@ class Controller {
    * id url parameter.
    * @public
    */
-  show(request: Request): Query<Model> {
-    return findOne(this.model, request)
+  show(req: Request): Query<Model> {
+    return findOne(this.model, req);
   }
 
   /**
@@ -635,7 +606,7 @@ class Controller {
    * @public
    */
   async create(req: Request, res: Response): Promise<Model> {
-    const { model } = this
+    const { model } = this;
 
     const {
       url: {
@@ -647,21 +618,21 @@ class Controller {
           relationships
         }
       }
-    } = req
+    } = req;
 
     const record = await model.create({
       ...attributes,
       ...resolveRelationships(model, relationships)
-    })
+    });
 
     res.setHeader(
       'Location',
-      `${getDomain(req) + (pathname || '')}/${record.getPrimaryKey()}`
-    )
+      `${getDomain(req) + pathname}/${record.getPrimaryKey()}`
+    );
 
-    Reflect.set(res, 'statusCode', 201)
+    Reflect.set(res, 'statusCode', 201);
 
-    return record.unwrap()
+    return record.unwrap();
   }
 
   /**
@@ -676,31 +647,32 @@ class Controller {
    * Resolves with the number `204` if no changes occur.
    * @public
    */
-  async update(request: Request): Promise<number | Model> {
-    const { model } = this
-    const record = await findOne(this.model, request)
+  update(req: Request): Promise<number | Model> {
+    const { model } = this;
 
-    const {
-      params: {
-        data: {
-          attributes,
-          relationships,
-        },
-      },
-    } = request
+    return findOne(model, req)
+      .then(record => {
+        const {
+          params: {
+            data: {
+              attributes,
+              relationships
+            }
+          }
+        } = req;
 
-    Object.assign(
-      record,
-      attributes,
-      resolveRelationships(model, relationships)
-    )
+        return record.update({
+          ...attributes,
+          ...resolveRelationships(model, relationships)
+        });
+      })
+      .then(record => {
+        if (record.didPersist) {
+          return record.unwrap();
+        }
 
-    if (record.isDirty) {
-      await record.save()
-      return record.reload()
-    }
-
-    return 204
+        return 204;
+      });
   }
 
   /**
@@ -717,7 +689,7 @@ class Controller {
   destroy(req: Request): Promise<number> {
     return findOne(this.model, req)
       .then(record => record.destroy())
-      .then(() => 204)
+      .then(() => 204);
   }
 
   /**
@@ -730,9 +702,16 @@ class Controller {
    * @public
    */
   preflight(): Promise<number> {
-    return Promise.resolve(204)
+    return Promise.resolve(204);
   }
 }
 
-export default Controller
-export { BUILT_IN_ACTIONS } from './constants'
+export default Controller;
+export { BUILT_IN_ACTIONS } from './constants';
+
+export type {
+  Controller$opts,
+  Controller$builtIn,
+  Controller$beforeAction,
+  Controller$afterAction,
+} from './interfaces';

@@ -1,13 +1,12 @@
-/* @flow */
-
+// @flow
 import type Controller from '../../../controller';
 import type { Route$type } from '../index';
-import type { Method } from '../../../request';
+import type { Request$method } from '../../../server';
 import type { Lux$Collection } from '../../../../interfaces';
 
 export type Params$opts = {
   type: Route$type;
-  method: Method;
+  method: Request$method;
   controller: Controller;
   dynamicSegments: Array<string>;
 };

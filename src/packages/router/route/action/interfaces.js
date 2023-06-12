@@ -1,6 +1,4 @@
-/* @flow */
+// @flow
+import type { Request, Response } from '../../../server';
 
-import type Request from '../../../request';
-import type Response from '../../../response';
-
-export type Action<T> = (request: Request, response: Response) => Promise<T>;
+export type Action<T> = (req: Request, res: Response) => Promise<T>;

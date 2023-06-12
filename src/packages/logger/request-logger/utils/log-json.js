@@ -1,40 +1,53 @@
-/* @flow */
+// @flow
+import type Logger from '../../index';
+import type { Request, Response } from '../../../server';
 
-import type Logger from '../../index'
-import type Request from '../../../request'
-import type Response from '../../../response'
+import filterParams from './filter-params';
 
-import filterParams from './filter-params'
-
-const MESSAGE = 'Processed Request'
-
-type Options = {
-  request: Request;
-  response: Response;
-}
+const MESSAGE = 'Processed Request';
 
 /**
  * @private
  */
-export default function logJSON(logger: Logger, options: Options): void {
-  const { request, response } = options
-  const { method, headers, url: { path } } = request
-  const { statusCode: status } = response
-  const userAgent = headers.get('user-agent')
-  const protocol = 'HTTP/1.1'
+export default function logJSON(logger: Logger, {
+  request: req,
+  response: res
+}: {
+  request: Request;
+  response: Response;
+}): void {
+  res.once('finish', () => {
+    const {
+      method,
+      headers,
+      httpVersion,
 
-  let { params } = request
-  params = filterParams(params, ...logger.filter.params)
+      url: {
+        path
+      },
 
-  logger.info({
-    message: MESSAGE,
+      connection: {
+        remoteAddress
+      }
+    } = req;
 
-    method,
-    path,
-    params,
-    status,
-    protocol,
-    userAgent,
-    remoteAddress: '::1'
-  })
+    const { statusCode: status } = res;
+    const userAgent = headers.get('user-agent');
+    const protocol = `HTTP/${httpVersion}`;
+
+    let { params } = req;
+    params = filterParams(params, ...logger.filter.params);
+
+    logger.info({
+      message: MESSAGE,
+
+      method,
+      path,
+      params,
+      status,
+      protocol,
+      userAgent,
+      remoteAddress
+    });
+  });
 }

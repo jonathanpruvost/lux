@@ -1,6 +1,5 @@
-/* @flow */
-
-import type Response from '../../response'
+// @flow
+import type { Response } from '../../server';
 
 /**
  * Create a Proxy that will trap typical node middleware callback invocations
@@ -18,11 +17,11 @@ export default function createResponseProxy(
         case 'end':
         case 'send':
         case 'json':
-          return resolve
+          return resolve;
 
         default:
-          return Reflect.get(target, key)
+          return Reflect.get(target, key);
       }
     }
-  })
+  });
 }

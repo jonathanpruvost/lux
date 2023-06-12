@@ -1,5 +1,4 @@
-/* @flow */
-
+// @flow
 export type Generator$opts = {
   cwd: string;
   type: string;

@@ -1,32 +1,18 @@
-/* @flow */
+// @flow
+import { LUX_CONSOLE } from '../../constants';
+import K from '../../utils/k';
 
-import { LUX_CONSOLE } from '../../constants'
-import K from '../../utils/k'
-
-import { LEVELS } from './constants'
-import { createWriter } from './writer'
-import { createRequestLogger } from './request-logger'
-import type { RequestLogger } from './request-logger'
-
-export type Format = 'text' | 'json'
-export type LogFunction = (data: string | Object) => void
-
-export type Level =
-  | 'DEBUG'
-  | 'INFO'
-  | 'WARN'
-  | 'ERROR'
-
-export type Filter = {
-  params: Array<string>;
-}
-
-export type Config = {
-  level: Level;
-  format: Format;
-  filter: Filter;
-  enabled: boolean;
-}
+import { LEVELS } from './constants';
+import { createWriter } from './writer';
+import { createRequestLogger } from './request-logger';
+import type { Logger$RequestLogger } from './request-logger/interfaces';
+import type {
+  Logger$config,
+  Logger$format,
+  Logger$level,
+  Logger$logFn,
+  Logger$filter
+} from './interfaces';
 
 /**
  * @class Logger
@@ -40,7 +26,7 @@ class Logger {
    * @type {String}
    * @public
    */
-  level: Level;
+  level: Logger$level;
 
   /**
    * The output format of log data (text or json).
@@ -49,7 +35,7 @@ class Logger {
    * @type {String}
    * @public
    */
-  format: Format;
+  format: Logger$format;
 
   /**
    * Hackers love logs. It's easy to get sensitive user information from log
@@ -120,7 +106,7 @@ class Logger {
    * @type {Object}
    * @public
    */
-  filter: Filter;
+  filter: Logger$filter;
 
   /**
    * A boolean flag that determines whether or not the logger is enabled.
@@ -144,7 +130,7 @@ class Logger {
    * @return {void}
    * @public
    */
-  debug: LogFunction;
+  debug: Logger$logFn;
 
   /**
    * Log a message at the INFO level.
@@ -159,7 +145,7 @@ class Logger {
    * @return {void}
    * @public
    */
-  info: LogFunction;
+  info: Logger$logFn;
 
   /**
    * Log a message at the WARN level.
@@ -174,7 +160,7 @@ class Logger {
    * @return {void}
    * @public
    */
-  warn: LogFunction;
+  warn: Logger$logFn;
 
   /**
    * Log a message at the ERROR level.
@@ -189,7 +175,7 @@ class Logger {
    * @return {void}
    * @public
    */
-  error: LogFunction;
+  error: Logger$logFn;
 
   /**
    * Internal method used for logging requests.
@@ -203,15 +189,15 @@ class Logger {
    * @return {void}
    * @private
    */
-  request: RequestLogger;
+  request: Logger$RequestLogger;
 
-  constructor({ level, format, filter, enabled }: Config) {
-    let write = K
-    let request = K
+  constructor({ level, format, filter, enabled }: Logger$config) {
+    let write = K;
+    let request = K;
 
     if (!LUX_CONSOLE && enabled) {
-      write = createWriter(format)
-      request = createRequestLogger(this)
+      write = createWriter(format);
+      request = createRequestLogger(this);
     }
 
     Object.defineProperties(this, {
@@ -221,48 +207,53 @@ class Logger {
         enumerable: true,
         configurable: false
       },
+
       format: {
         value: format,
         writable: false,
         enumerable: true,
         configurable: false
       },
+
       filter: {
         value: filter,
         writable: false,
         enumerable: true,
         configurable: false
       },
+
       enabled: {
         value: Boolean(enabled),
         writable: false,
         enumerable: true,
         configurable: false
       },
+
       request: {
         value: request,
         writable: false,
         enumerable: false,
         configurable: false
       }
-    })
+    });
 
-    const levelNum = LEVELS.get(level) || 0
+    const levelNum = LEVELS.get(level) || 0;
 
-    LEVELS.forEach((val, key) => {
-      Object.defineProperty(this, key.toLowerCase(), {
+    LEVELS.forEach((val, key: Logger$level) => {
+      Reflect.defineProperty(this, key.toLowerCase(), {
+        writable: false,
+        enumerable: false,
+        configurable: false,
+
         value: val >= levelNum ? (message: void | ?mixed) => {
           write({
             message,
             level: key,
             timestamp: this.getTimestamp()
-          })
-        } : K,
-        writable: false,
-        enumerable: false,
-        configurable: false,
-      })
-    })
+          });
+        } : K
+      });
+    });
   }
 
   /**
@@ -271,10 +262,12 @@ class Logger {
    * @private
    */
   getTimestamp() {
-    return new Date().toISOString()
+    return new Date().toISOString();
   }
 }
 
-export default Logger
-export { default as line } from './utils/line'
-export { default as sql } from './utils/sql'
+export default Logger;
+export { default as line } from './utils/line';
+export { default as sql } from './utils/sql';
+
+export type { Logger$config } from './interfaces';

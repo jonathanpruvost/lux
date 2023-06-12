@@ -1,8 +1,8 @@
-/* @flow */
+// @flow
+import { createServerError } from '../../server';
 
-import createServerError from '../../../errors/utils/create-server-error'
+class UniqueConstraintError extends Error {
 
-export default createServerError(
-  class UniqueConstraintError extends Error {},
-  409
-)
+}
+
+export default createServerError(UniqueConstraintError, 409);

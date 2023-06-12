@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 
 /**
  * A utility function that always returns `this` based on it's current
@@ -10,5 +10,5 @@
  * @private
  */
 export default function K(): any {
-  return this
+  return this;
 }

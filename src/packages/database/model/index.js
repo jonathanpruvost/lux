@@ -1,34 +1,32 @@
-/* @flow */
+// @flow
+import { pluralize } from 'inflection';
 
-import { pluralize } from 'inflection'
-
-import Query from '../query'
-import ChangeSet from '../change-set'
-import { updateRelationship } from '../relationship'
+import Query from '../query';
+import ChangeSet from '../change-set';
+import { updateRelationship } from '../relationship';
 import {
   createTransactionResultProxy,
   createStaticTransactionProxy,
   createInstanceTransactionProxy
-} from '../transaction'
-import pick from '../../../utils/pick'
-import entries from '../../../utils/entries'
-import underscore from '../../../utils/underscore'
-import { compose } from '../../../utils/compose'
-import { map as diffMap } from '../../../utils/diff'
-import mapToObject from '../../../utils/map-to-object'
-import type Logger from '../../logger'
-import type Database from '../../database'
-import type Serializer from '../../serializer'
+} from '../transaction';
+import pick from '../../../utils/pick';
+import underscore from '../../../utils/underscore';
+import { compose } from '../../../utils/compose';
+import { map as diffMap } from '../../../utils/diff';
+import mapToObject from '../../../utils/map-to-object';
+import type Logger from '../../logger';
+import type Database from '../../database';
+import type Serializer from '../../serializer';
 /* eslint-disable no-duplicate-imports */
-import type { Relationship$opts } from '../relationship'
-import type { Transaction$ResultProxy } from '../transaction'
+import type { Relationship$opts } from '../relationship';
+import type { Transaction$ResultProxy } from '../transaction';
 /* eslint-enable no-duplicate-imports */
 
-import { create, update, destroy, createRunner } from './utils/persistence'
-import initializeClass from './initialize-class'
-import validate from './utils/validate'
-import runHooks from './utils/run-hooks'
-import type { Model$Hooks } from './interfaces'
+import { create, update, destroy, createRunner } from './utils/persistence';
+import initializeClass from './initialize-class';
+import validate from './utils/validate';
+import runHooks from './utils/run-hooks';
+import type { Model$Hooks } from './interfaces';
 
 /**
  * @class Model
@@ -677,12 +675,12 @@ class Model {
         enumerable: false,
         configurable: false
       }
-    })
+    });
 
-    const { constructor: { attributeNames, relationshipNames } } = this
-    const props = pick(attrs, ...attributeNames.concat(relationshipNames))
+    const { constructor: { attributeNames, relationshipNames } } = this;
+    const props = pick(attrs, ...attributeNames.concat(relationshipNames));
 
-    Object.assign(this, props)
+    Object.assign(this, props);
 
     if (initialize) {
       Reflect.defineProperty(this, 'initialized', {
@@ -690,10 +688,10 @@ class Model {
         writable: false,
         enumerable: false,
         configurable: false
-      })
+      });
     }
 
-    return this
+    return this;
   }
 
   /**
@@ -726,7 +724,7 @@ class Model {
    * @public
    */
   get isNew(): boolean {
-    return !this.persistedChangeSet
+    return !this.persistedChangeSet;
   }
 
   /**
@@ -759,7 +757,7 @@ class Model {
    * @public
    */
   get isDirty(): boolean {
-    return Boolean(this.dirtyProperties.size)
+    return Boolean(this.dirtyProperties.size);
   }
 
   /**
@@ -792,7 +790,7 @@ class Model {
    * @public
    */
   get persisted(): boolean {
-    return !this.isNew && !this.isDirty
+    return !this.isNew && !this.isDirty;
   }
 
   /**
@@ -806,15 +804,17 @@ class Model {
       constructor: {
         relationshipNames
       }
-    } = this
+    } = this;
 
-    dirtyProperties.forEach((prop, key) => {
-      if (relationshipNames.indexOf(key) >= 0) {
-        dirtyProperties.delete(key)
-      }
-    })
+    Array
+      .from(dirtyProperties.keys())
+      .forEach(key => {
+        if (relationshipNames.indexOf(key) >= 0) {
+          dirtyProperties.delete(key);
+        }
+      });
 
-    return dirtyProperties
+    return dirtyProperties;
   }
 
   /**
@@ -828,17 +828,17 @@ class Model {
       constructor: {
         attributeNames
       }
-    } = this
+    } = this;
 
     Array
       .from(dirtyProperties.keys())
       .forEach(key => {
         if (attributeNames.indexOf(key) >= 0) {
-          dirtyProperties.delete(key)
+          dirtyProperties.delete(key);
         }
-      })
+      });
 
-    return dirtyProperties
+    return dirtyProperties;
   }
 
   /**
@@ -847,13 +847,13 @@ class Model {
    * @private
    */
   get dirtyProperties(): Map<string, any> {
-    const { currentChangeSet, persistedChangeSet } = this
+    const { currentChangeSet, persistedChangeSet } = this;
 
     if (!persistedChangeSet) {
-      return new Map(currentChangeSet)
+      return new Map(currentChangeSet);
     }
 
-    return diffMap(persistedChangeSet, currentChangeSet)
+    return diffMap(persistedChangeSet, currentChangeSet);
   }
 
   /**
@@ -862,7 +862,7 @@ class Model {
    * @private
    */
   get currentChangeSet(): ChangeSet {
-    return this.changeSets[0]
+    return this.changeSets[0];
   }
 
   /**
@@ -871,7 +871,7 @@ class Model {
    * @private
    */
   get persistedChangeSet(): void | ChangeSet {
-    return this.changeSets.find(({ isPersisted }) => isPersisted)
+    return this.changeSets.find(({ isPersisted }) => isPersisted);
   }
 
   /**
@@ -915,7 +915,7 @@ class Model {
    * @public
    */
   transacting(trx: Object): this {
-    return createInstanceTransactionProxy(this, trx)
+    return createInstanceTransactionProxy(this, trx);
   }
 
   /**
@@ -949,7 +949,7 @@ class Model {
    * @public
    */
   transaction<T>(fn: (...args: Array<any>) => Promise<T>): Promise<T> {
-    return this.constructor.transaction(fn)
+    return this.constructor.transaction(fn);
   }
 
   /**
@@ -977,7 +977,7 @@ class Model {
    * @public
    */
   save(transaction?: Object): Promise<Transaction$ResultProxy<this, *>> {
-    return this.update(mapToObject(this.dirtyProperties), transaction)
+    return this.update(mapToObject(this.dirtyProperties), transaction);
   }
 
   /**
@@ -1009,64 +1009,64 @@ class Model {
     transaction?: Object
   ): Promise<Transaction$ResultProxy<this, *>> {
     const run = async (trx: Object) => {
-      const { constructor: { hooks, logger } } = this
-      let statements = []
-      let promise = Promise.resolve([])
-      let hadDirtyAttrs = false
-      let hadDirtyAssoc = false
+      const { constructor: { hooks, logger } } = this;
+      let statements = [];
+      let promise = Promise.resolve([]);
+      let hadDirtyAttrs = false;
+      let hadDirtyAssoc = false;
 
       const associations = Object
         .keys(props)
         .filter(key => (
           Boolean(this.constructor.relationshipFor(key))
-        ))
+        ));
 
-      Object.assign(this, props)
+      Object.assign(this, props);
 
       if (associations.length) {
-        hadDirtyAssoc = true
+        hadDirtyAssoc = true;
         statements = associations.reduce((arr, key) => [
           ...arr,
           ...updateRelationship(this, key, trx)
-        ], [])
+        ], []);
       }
 
       if (this.isDirty) {
-        hadDirtyAttrs = true
+        hadDirtyAttrs = true;
 
-        await runHooks(this, trx, hooks.beforeValidation)
+        await runHooks(this, trx, hooks.beforeValidation);
 
-        validate(this)
+        validate(this);
 
         await runHooks(this, trx,
           hooks.afterValidation,
           hooks.beforeUpdate,
           hooks.beforeSave
-        )
+        );
 
-        promise = update(this, trx)
+        promise = update(this, trx);
       }
 
-      await createRunner(logger, statements)(await promise)
+      await createRunner(logger, statements)(await promise);
 
-      this.prevAssociations.clear()
-      this.currentChangeSet.persist(this.changeSets)
+      this.prevAssociations.clear();
+      this.currentChangeSet.persist(this.changeSets);
 
       if (hadDirtyAttrs) {
         await runHooks(this, trx,
           hooks.afterUpdate,
           hooks.afterSave
-        )
+        );
       }
 
-      return createTransactionResultProxy(this, hadDirtyAttrs || hadDirtyAssoc)
-    }
+      return createTransactionResultProxy(this, hadDirtyAttrs || hadDirtyAssoc);
+    };
 
     if (transaction) {
-      return run(transaction)
+      return run(transaction);
     }
 
-    return this.transaction(run)
+    return this.transaction(run);
   }
 
   /**
@@ -1078,20 +1078,20 @@ class Model {
    */
   destroy(transaction?: Object): Promise<Transaction$ResultProxy<this, true>> {
     const run = async (trx: Object) => {
-      const { constructor: { hooks, logger } } = this
+      const { constructor: { hooks, logger } } = this;
 
-      await runHooks(this, trx, hooks.beforeDestroy)
-      await createRunner(logger, [])(await destroy(this, trx))
-      await runHooks(this, trx, hooks.afterDestroy)
+      await runHooks(this, trx, hooks.beforeDestroy);
+      await createRunner(logger, [])(await destroy(this, trx));
+      await runHooks(this, trx, hooks.afterDestroy);
 
-      return createTransactionResultProxy(this, true)
-    }
+      return createTransactionResultProxy(this, true);
+    };
 
     if (transaction) {
-      return run(transaction)
+      return run(transaction);
     }
 
-    return this.transaction(run)
+    return this.transaction(run);
   }
 
   /**
@@ -1101,30 +1101,12 @@ class Model {
    * @return {Promise} Resolves with `this`.
    * @public
    */
-  reload(): Query<this> {
+  reload(): Promise<this> {
     if (this.isNew) {
-      // $FlowIgnore
-      return Promise.resolve(this)
+      return Promise.resolve(this);
     }
 
-    const {
-      persistedChangeSet,
-      constructor: {
-        attributeNames,
-        relationshipNames,
-      },
-    } = this
-
-    let filterKey = key => attributeNames.includes(key)
-
-    if (persistedChangeSet) {
-      filterKey = key => persistedChangeSet.has(key)
-    }
-
-    return this.constructor
-      .find(this.getPrimaryKey())
-      .select(...attributeNames.filter(filterKey))
-      .include(...relationshipNames.filter(filterKey))
+    return this.constructor.find(this.getPrimaryKey());
   }
 
   /**
@@ -1136,15 +1118,15 @@ class Model {
    * @public
    */
   rollback(): this {
-    const { persistedChangeSet } = this
+    const { persistedChangeSet } = this;
 
     if (persistedChangeSet && !this.currentChangeSet.isPersisted) {
       persistedChangeSet
         .applyTo(this)
-        .persist(this.changeSets)
+        .persist(this.changeSets);
     }
 
-    return this
+    return this;
   }
 
   /**
@@ -1154,14 +1136,8 @@ class Model {
    * and their associated values.
    * @private
    */
-  getAttributes(...attrs: Array<string>): Object {
-    let keys = attrs
-
-    if (keys.length === 0) {
-      keys = this.constructor.attributeNames
-    }
-
-    return pick(this, ...keys)
+  getAttributes(...keys: Array<string>): Object {
+    return pick(this, ...keys);
   }
 
   /**
@@ -1170,32 +1146,7 @@ class Model {
    * @private
    */
   getPrimaryKey(): number {
-    return Reflect.get(this, this.constructor.primaryKey)
-  }
-
-  toObject(callee?: Model, prev?: Object): Object {
-    const { currentChangeSet, constructor: { relationships } } = this
-
-    return entries(relationships).reduce((obj, [key, { type }]) => {
-      const value = currentChangeSet.get(key)
-
-      /* eslint-disable no-param-reassign */
-
-      if (type === 'hasMany' && Array.isArray(value)) {
-        obj[key] = value.map(item => {
-          if (item === callee) {
-            return prev
-          }
-          return item.toObject(this, obj)
-        })
-      } else if (value && typeof value.toObject === 'function') {
-        obj[key] = value === callee ? prev : value.toObject(this, obj)
-      }
-
-      /* eslint-enable no-param-reassign */
-
-      return obj
-    }, this.getAttributes())
+    return Reflect.get(this, this.constructor.primaryKey);
   }
 
   /**
@@ -1213,61 +1164,61 @@ class Model {
     transaction?: Object
   ): Promise<Transaction$ResultProxy<this, true>> {
     const run = async (trx: Object) => {
-      const { hooks, logger, primaryKey } = this
-      const instance = Reflect.construct(this, [props, false])
-      let statements = []
+      const { hooks, logger, primaryKey } = this;
+      const instance = Reflect.construct(this, [props, false]);
+      let statements = [];
 
       const associations = Object
         .keys(props)
         .filter(key => (
           Boolean(this.relationshipFor(key))
-        ))
+        ));
 
       if (associations.length) {
         statements = associations.reduce((arr, key) => [
           ...arr,
           ...updateRelationship(instance, key, trx)
-        ], [])
+        ], []);
       }
 
-      await runHooks(instance, trx, hooks.beforeValidation)
+      await runHooks(instance, trx, hooks.beforeValidation);
 
-      validate(instance)
+      validate(instance);
 
       await runHooks(instance, trx,
         hooks.afterValidation,
         hooks.beforeCreate,
         hooks.beforeSave
-      )
+      );
 
-      const runner = createRunner(logger, statements)
-      const [[primaryKeyValue]] = await runner(await create(instance, trx))
+      const runner = createRunner(logger, statements);
+      const [[primaryKeyValue]] = await runner(await create(instance, trx));
 
-      Reflect.set(instance, primaryKey, primaryKeyValue)
-      Reflect.set(instance.rawColumnData, primaryKey, primaryKeyValue)
+      Reflect.set(instance, primaryKey, primaryKeyValue);
+      Reflect.set(instance.rawColumnData, primaryKey, primaryKeyValue);
 
       Reflect.defineProperty(instance, 'initialized', {
         value: true,
         writable: false,
         enumerable: false,
         configurable: false
-      })
+      });
 
-      instance.currentChangeSet.persist(instance.changeSets)
+      instance.currentChangeSet.persist(instance.changeSets);
 
       await runHooks(instance, trx,
         hooks.afterCreate,
         hooks.afterSave
-      )
+      );
 
-      return createTransactionResultProxy(instance, true)
-    }
+      return createTransactionResultProxy(instance, true);
+    };
 
     if (transaction) {
-      return run(transaction)
+      return run(transaction);
     }
 
-    return this.transaction(run)
+    return this.transaction(run);
   }
 
   /**
@@ -1305,7 +1256,7 @@ class Model {
    * @public
    */
   static transacting(trx: Object): Class<this> {
-    return createStaticTransactionProxy(this, trx)
+    return createStaticTransactionProxy(this, trx);
   }
 
   /**
@@ -1337,100 +1288,96 @@ class Model {
    * @public
    */
   static transaction<T>(fn: (...args: Array<any>) => Promise<T>): Promise<T> {
-    if (this.store.hasPool) {
-      return new Promise((resolve, reject) => {
-        const { store: { connection } } = this
-        let result: T
+    return new Promise((resolve, reject) => {
+      const { store: { connection } } = this;
+      let result: T;
 
-        connection
-          .transaction(trx => {
-            fn(trx)
-              .then(data => {
-                result = data
-                return trx.commit()
-              })
-              .catch(trx.rollback)
-          })
-          .then(() => {
-            resolve(result)
-          })
-          .catch(err => {
-            reject(err)
-          })
-      })
-    }
-
-    return fn()
+      connection
+        .transaction(trx => {
+          fn(trx)
+            .then(data => {
+              result = data;
+              return trx.commit();
+            })
+            .catch(trx.rollback);
+        })
+        .then(() => {
+          resolve(result);
+        })
+        .catch(err => {
+          reject(err);
+        });
+    });
   }
 
   static all(): Query<Array<this>> {
-    return new Query(this).all()
+    return new Query(this).all();
   }
 
   static find(primaryKey: any): Query<this> {
-    return new Query(this).find(primaryKey)
+    return new Query(this).find(primaryKey);
   }
 
   static page(num: number): Query<Array<this>> {
-    return new Query(this).page(num)
+    return new Query(this).page(num);
   }
 
   static limit(amount: number): Query<Array<this>> {
-    return new Query(this).limit(amount)
+    return new Query(this).limit(amount);
   }
 
   static offset(amount: number): Query<Array<this>> {
-    return new Query(this).offset(amount)
+    return new Query(this).offset(amount);
   }
 
   static count(): Query<number> {
-    return new Query(this).count()
+    return new Query(this).count();
   }
 
   static order(attr: string, direction?: string): Query<Array<this>> {
-    return new Query(this).order(attr, direction)
+    return new Query(this).order(attr, direction);
   }
 
   static where(conditions: Object): Query<Array<this>> {
-    return new Query(this).where(conditions)
+    return new Query(this).where(conditions);
   }
 
   static whereBetween(conditions: Object): Query<Array<this>> {
-    return new Query(this).whereBetween(conditions)
+    return new Query(this).whereBetween(conditions);
   }
 
   static whereRaw(
     query: string,
     bindings: Array<any> = []): Query<Array<this>> {
-    return new Query(this).whereRaw(query, bindings)
+    return new Query(this).whereRaw(query, bindings);
   }
 
   static not(conditions: Object): Query<Array<this>> {
-    return new Query(this).not(conditions)
+    return new Query(this).not(conditions);
   }
 
   static first(): Query<this> {
-    return new Query(this).first()
+    return new Query(this).first();
   }
 
   static last(): Query<this> {
-    return new Query(this).last()
+    return new Query(this).last();
   }
 
   static select(...params: Array<string>): Query<Array<this>> {
-    return new Query(this).select(...params)
+    return new Query(this).select(...params);
   }
 
   static distinct(...params: Array<string>): Query<Array<this>> {
-    return new Query(this).distinct(...params)
+    return new Query(this).distinct(...params);
   }
 
   static include(...relationships: Array<string | Object>): Query<Array<this>> {
-    return new Query(this).include(...relationships)
+    return new Query(this).include(...relationships);
   }
 
   static unscope(...scopes: Array<string>): Query<Array<this>> {
-    return new Query(this).unscope(...scopes)
+    return new Query(this).unscope(...scopes);
   }
 
   /**
@@ -1443,7 +1390,7 @@ class Model {
    * @public
    */
   static hasScope(name: string): boolean {
-    return Boolean(Reflect.get(this.scopes, name))
+    return Boolean(Reflect.get(this.scopes, name));
   }
 
   /**
@@ -1456,7 +1403,7 @@ class Model {
    * @public
    */
   static isInstance(value: any): boolean {
-    return value instanceof this
+    return value instanceof this;
   }
 
   /**
@@ -1474,33 +1421,33 @@ class Model {
    */
   static initialize(store, table): Promise<Class<this>> {
     if (this.initialized) {
-      return Promise.resolve(this)
+      return Promise.resolve(this);
     }
 
     if (!this.tableName) {
-      const getTableName = compose(pluralize, underscore)
-      const tableName = getTableName(this.name)
+      const getTableName = compose(pluralize, underscore);
+      const tableName = getTableName(this.name);
 
       Reflect.defineProperty(this, 'tableName', {
         value: tableName,
         writable: false,
         enumerable: true,
         configurable: false
-      })
+      });
 
       Reflect.defineProperty(this.prototype, 'tableName', {
         value: tableName,
         writable: false,
         enumerable: false,
         configurable: false
-      })
+      });
     }
 
     return initializeClass({
       store,
       table,
       model: this
-    })
+    });
   }
 
   /**
@@ -1512,7 +1459,7 @@ class Model {
    * @private
    */
   static columnFor(key: string): void | Object {
-    return Reflect.get(this.attributes, key)
+    return Reflect.get(this.attributes, key);
   }
 
   /**
@@ -1524,9 +1471,9 @@ class Model {
    * @private
    */
   static columnNameFor(key: string): void | string {
-    const column = this.columnFor(key)
+    const column = this.columnFor(key);
 
-    return column ? column.columnName : undefined
+    return column ? column.columnName : undefined;
   }
 
   /**
@@ -1538,10 +1485,9 @@ class Model {
    * @private
    */
   static relationshipFor(key: string): void | Relationship$opts {
-    return Reflect.get(this.relationships, key)
+    return Reflect.get(this.relationships, key);
   }
 }
 
-export default Model
-export { default as tableFor } from './utils/table-for'
-export type { Model$Hook, Model$Hooks } from './interfaces'
+export default Model;
+export type { Model$Hook, Model$Hooks } from './interfaces';

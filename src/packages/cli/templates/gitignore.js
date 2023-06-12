@@ -1,6 +1,5 @@
-/* @flow */
-
-import template from '../../template'
+// @flow
+import template from '../../template';
 
 /**
  * @private
@@ -20,4 +19,4 @@ export default (): string => template`
 
   # misc
   *.DS_Store
-`
+`;

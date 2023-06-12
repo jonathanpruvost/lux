@@ -1,5 +1,4 @@
-/* @flow */
-
+// @flow
 export default function mapToObject<T>(
   source: Map<string, T>
 ): { [key: string]: T } {
@@ -8,5 +7,5 @@ export default function mapToObject<T>(
     .reduce((obj, [key, value]) => ({
       ...obj,
       [String(key)]: value
-    }), {})
+    }), {});
 }
